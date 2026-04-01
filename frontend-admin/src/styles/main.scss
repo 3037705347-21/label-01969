@@ -1,0 +1,379 @@
+@import './variables.scss';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: $text-primary;
+  background-color: $bg-base;
+}
+
+// Element Plus 主题覆盖
+:root {
+  --el-color-primary: #{$primary-color};
+  --el-color-primary-light-3: #{$primary-light};
+  --el-color-primary-dark-2: #{$primary-dark};
+}
+
+// 通用卡片样式
+.page-card {
+  background: $bg-card;
+  border-radius: $border-radius-base;
+  box-shadow: $shadow-sm;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+}
+
+// 页面标题
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: $spacing-lg;
+  padding-bottom: $spacing-md;
+  border-bottom: 1px solid $border-light;
+}
+
+// 搜索表单
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+  padding: $spacing-md;
+  background: $bg-hover;
+  border-radius: $border-radius-base;
+
+  .el-button {
+    margin-left: 0 !important;
+  }
+}
+
+// 表格操作按钮
+.table-actions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+// 状态标签
+.status-tag {
+  &.success {
+    background-color: rgba($success-color, 0.1);
+    color: $success-color;
+  }
+  &.warning {
+    background-color: rgba($warning-color, 0.1);
+    color: $warning-color;
+  }
+  &.danger {
+    background-color: rgba($error-color, 0.1);
+    color: $error-color;
+  }
+  &.info {
+    background-color: rgba($info-color, 0.1);
+    color: $info-color;
+  }
+}
+
+// 空状态
+.empty-state {
+  text-align: center;
+  padding: $spacing-xl * 2;
+  color: $text-secondary;
+}
+
+// 图片预览
+.image-preview {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+// 按钮hover效果
+.el-button {
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: $shadow-sm;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+}
+
+// 表单项间距
+.el-form-item {
+  margin-bottom: $spacing-lg;
+}
+
+// 分页居中
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: $spacing-lg;
+  padding-top: $spacing-md;
+}
+
+// 统计卡片通用样式
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+  cursor: default;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  &.clickable {
+    cursor: pointer;
+
+    &:active {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+// 可点击元素通用样式
+.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+// 消息项点击反馈
+.message-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f5f7fa;
+  }
+
+  &:active {
+    background: #ebeef5;
+  }
+}
+
+// 列表项点击反馈
+.list-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 107, 53, 0.05);
+  }
+
+  &:active {
+    background: rgba(255, 107, 53, 0.1);
+  }
+}
+
+// 表格行悬停效果增强
+.el-table {
+  width: 100% !important;
+  --el-table-header-bg-color: #f5f7fa;
+  --el-table-header-text-color: #303133;
+
+  .el-table__empty-text {
+    color: $text-secondary;
+  }
+
+  // 行悬停效果
+  .el-table__row {
+    transition: background-color 0.2s ease;
+
+    &:hover > td {
+      background-color: rgba(255, 107, 53, 0.04) !important;
+    }
+  }
+
+  // 所有单元格内容不截断
+  .cell {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+
+    // 按钮样式统一，减小间距
+    .el-button {
+      font-size: 14px;
+      margin-left: 0 !important;
+      margin-right: 2px !important;
+
+      &:last-child {
+        margin-right: 0 !important;
+      }
+
+      &.el-button--text {
+        padding: 4px 2px;
+      }
+    }
+  }
+
+  // 固定右侧操作列 - 确保内容不被截断
+  .el-table-fixed-column--right {
+    .cell {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      align-items: center !important;
+      overflow: visible !important;
+    }
+  }
+}
+
+// 固定操作列覆盖滚动内容 - 使用高优先级全局选择器
+.el-table {
+  // 固定右侧列始终有不透明背景，覆盖滚动内容
+  td.el-table-fixed-column--right,
+  th.el-table-fixed-column--right {
+    background-color: #fff !important;
+    z-index: 10 !important;
+  }
+
+  // stripe 偶数行
+  .el-table__row--striped td.el-table-fixed-column--right {
+    background-color: #fafafa !important;
+  }
+
+  // 行悬停时固定列背景用不透明色 + 左侧阴影分隔
+  .el-table__row:hover > td.el-table-fixed-column--right,
+  .el-table__body tr:hover > td.el-table-fixed-column--right {
+    background-color: #fff5f1 !important;
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.08);
+  }
+
+  // stripe 偶数行悬停
+  .el-table__row--striped:hover > td.el-table-fixed-column--right {
+    background-color: #fff5f1 !important;
+  }
+
+  // 表头固定列
+  th.el-table-fixed-column--right {
+    z-index: 11 !important;
+    background-color: #f5f7fa !important;
+  }
+}
+
+// 表格容器支持横向滚动
+.page-card {
+  overflow-x: auto;
+  overflow-y: visible;
+
+  .el-table {
+    min-width: 100%;
+    overflow: visible !important;
+  }
+
+  .el-table__body-wrapper {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+}
+
+// 页面卡片内表格占满宽度
+.page-card {
+  .el-table {
+    width: 100%;
+  }
+}
+
+// 标签点击效果
+.el-tag {
+  &.clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}
+
+// 头像点击效果
+.el-avatar {
+  &.clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+    }
+  }
+}
+
+// 输入框聚焦效果增强
+.el-input__wrapper {
+  transition: box-shadow 0.2s ease;
+
+  &:focus-within {
+    box-shadow: 0 0 0 1px var(--el-color-primary) inset, 0 0 0 3px rgba(255, 107, 53, 0.1) !important;
+  }
+}
+
+// 选择框聚焦效果
+.el-select .el-input__wrapper {
+  &:focus-within {
+    box-shadow: 0 0 0 1px var(--el-color-primary) inset, 0 0 0 3px rgba(255, 107, 53, 0.1) !important;
+  }
+}
+
+// 对话框动画增强
+.el-dialog {
+  animation: dialogFadeIn 0.3s ease;
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// 消息提示样式增强
+.el-message {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+}
+
+// 通知样式增强
+.el-notification {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+}
