@@ -22,38 +22,46 @@ import com.petadopt.service.FollowUpService;
 import com.petadopt.service.MessageService;
 import com.petadopt.util.UserContext;
 import com.petadopt.vo.FollowUpRecordVO;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
-@Slf4j
+
 @Service
-@RequiredArgsConstructor
+@Transactional
 public class FollowUpServiceImpl extends ServiceImpl<FollowUpRecordMapper, FollowUpRecord> implements FollowUpService {
 
+    private static final Logger logger = LoggerFactory.getLogger(FollowUpServiceImpl.class);
     private final PetMapper petMapper;
     private final UserMapper userMapper;
     private final AdoptionApplicationMapper applicationMapper;
     private final MessageService messageService;
+
+    public FollowUpServiceImpl(PetMapper petMapper, UserMapper userMapper, AdoptionApplicationMapper applicationMapper, MessageService messageService) {
+        this.petMapper = petMapper;
+        this.userMapper = userMapper;
+        this.applicationMapper = applicationMapper;
+        this.messageService = messageService;
+    }
 
     @Override
     public void submitFollowUp(FollowUpDTO dto) {
         Long userId = UserContext.getUserId();
         AdoptionApplication application = applicationMapper.selectById(dto.getApplicationId());
         if (application == null) {
-            log.error("提交跟进记录失败-申请不存在: userId={}, applicationId={}", userId, dto.getApplicationId());
+            logger.error("提交跟进记录失败-申请不存在: userId={}, applicationId={}", userId, dto.getApplicationId());
             throw new BusinessException("领养申请不存在");
         }
         if (!application.getApplicantId().equals(userId)) {
-            log.error("提交跟进记录权限不足: userId={}, applicationId={}, applicantId={}", userId, dto.getApplicationId(), application.getApplicantId());
+            logger.error("提交跟进记录权限不足: userId={}, applicationId={}, applicantId={}", userId, dto.getApplicationId(), application.getApplicantId());
             throw new BusinessException("无权提交此跟进记录");
         }
         if (application.getFinalStatus() != 1) {
-            log.error("提交跟进记录失败-申请未成功: userId={}, applicationId={}, finalStatus={}", userId, dto.getApplicationId(), application.getFinalStatus());
+            logger.error("提交跟进记录失败-申请未成功: userId={}, applicationId={}, finalStatus={}", userId, dto.getApplicationId(), application.getFinalStatus());
             throw new BusinessException("只有领养成功的申请才能提交跟进记录");
         }
 
@@ -77,21 +85,21 @@ public class FollowUpServiceImpl extends ServiceImpl<FollowUpRecordMapper, Follo
         Pet pet = petMapper.selectById(dto.getPetId());
         User adopter = userMapper.selectById(userId);
         String adopterName = adopter != null ? (adopter.getRealName() != null ? adopter.getRealName() : adopter.getUsername()) : "未知";
-        
+
         if (pet != null) {
             // 通知救助方
             messageService.sendMessage(pet.getPublisherId(), "新的跟进记录",
                     "宠物\"" + pet.getName() + "\"有新的跟进记录，领养人：" + adopterName + "，请查看。", 3);
-            
+
             // 通知所有管理员
-            notifyAdmins("新的跟进记录", 
+            notifyAdmins("新的跟进记录",
                     "宠物\"" + pet.getName() + "\"有新的跟进记录，领养人：" + adopterName + "，请查看。");
         }
 
-        log.info("提交跟进记录成功: userId={}, recordId={}, petId={}, petName={}, applicationId={}", 
+        logger.info("提交跟进记录成功: userId={}, recordId={}, petId={}, petName={}, applicationId={}",
                 userId, record.getId(), dto.getPetId(), pet != null ? pet.getName() : "unknown", dto.getApplicationId());
     }
-    
+
     private void notifyAdmins(String title, String content) {
         // 查询所有管理员
         java.util.List<User> admins = userMapper.selectList(
@@ -140,7 +148,7 @@ public class FollowUpServiceImpl extends ServiceImpl<FollowUpRecordMapper, Follo
         Long userId = UserContext.getUserId();
         FollowUpRecord record = getById(id);
         if (record == null) {
-            log.error("审核跟进记录失败-记录不存在: userId={}, recordId={}", userId, id);
+            logger.error("审核跟进记录失败-记录不存在: userId={}, recordId={}", userId, id);
             throw new BusinessException("跟进记录不存在");
         }
 
@@ -154,9 +162,9 @@ public class FollowUpServiceImpl extends ServiceImpl<FollowUpRecordMapper, Follo
         if (status == 2) {
             messageService.sendMessage(record.getAdopterId(), "跟进记录异常提醒",
                     "您提交的跟进记录被标记为异常，请注意。" + (StringUtils.hasText(comment) ? "备注：" + comment : ""), 3);
-            log.info("标记跟进记录异常: userId={}, recordId={}, adopterId={}, petId={}, comment={}", userId, id, record.getAdopterId(), record.getPetId(), comment);
+            logger.info("标记跟进记录异常: userId={}, recordId={}, adopterId={}, petId={}, comment={}", userId, id, record.getAdopterId(), record.getPetId(), comment);
         } else {
-            log.info("审核跟进记录: userId={}, recordId={}, oldStatus={}, newStatus={}", userId, id, oldStatus, status);
+            logger.info("审核跟进记录: userId={}, recordId={}, oldStatus={}, newStatus={}", userId, id, oldStatus, status);
         }
     }
 
@@ -166,7 +174,7 @@ public class FollowUpServiceImpl extends ServiceImpl<FollowUpRecordMapper, Follo
         Long userId = UserContext.getUserId();
         Pet pet = petMapper.selectById(petId);
         if (pet == null) {
-            log.error("回收宠物失败-宠物不存在: userId={}, petId={}", userId, petId);
+            logger.error("回收宠物失败-宠物不存在: userId={}, petId={}", userId, petId);
             throw new BusinessException("宠物不存在");
         }
 
@@ -187,9 +195,9 @@ public class FollowUpServiceImpl extends ServiceImpl<FollowUpRecordMapper, Follo
         if (application != null) {
             messageService.sendMessage(application.getApplicantId(), "宠物回收通知",
                     "您领养的宠物\"" + pet.getName() + "\"已被回收。原因：" + reason, 1);
-            log.info("回收宠物成功: userId={}, petId={}, petName={}, adopterId={}, reason={}", userId, petId, pet.getName(), application.getApplicantId(), reason);
+            logger.info("回收宠物成功: userId={}, petId={}, petName={}, adopterId={}, reason={}", userId, petId, pet.getName(), application.getApplicantId(), reason);
         } else {
-            log.info("回收宠物成功(无领养记录): userId={}, petId={}, petName={}, reason={}", userId, petId, pet.getName(), reason);
+            logger.info("回收宠物成功(无领养记录): userId={}, petId={}, petName={}, reason={}", userId, petId, pet.getName(), reason);
         }
     }
 

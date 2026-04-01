@@ -17,6 +17,9 @@ public enum PetStatus {
         this.name = name;
     }
 
+    public Integer getCode() { return code; }
+    public String getName() { return name; }
+
     public static String getNameByCode(Integer code) {
         for (PetStatus status : values()) {
             if (status.getCode().equals(code)) {

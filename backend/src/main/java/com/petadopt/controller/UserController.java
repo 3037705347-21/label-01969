@@ -11,15 +11,17 @@ import com.petadopt.service.UserService;
 import com.petadopt.vo.LoginVO;
 import com.petadopt.vo.UserVO;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/user")
-@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @PostMapping("/register")
     @OperLog(module = "用户管理", action = "用户注册")

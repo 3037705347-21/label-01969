@@ -8,15 +8,17 @@ import com.petadopt.dto.ReviewDTO;
 import com.petadopt.service.AdoptionService;
 import com.petadopt.vo.AdoptionApplicationVO;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/adoption")
-@RequiredArgsConstructor
 public class AdoptionController {
 
     private final AdoptionService adoptionService;
+
+    public AdoptionController(AdoptionService adoptionService) {
+        this.adoptionService = adoptionService;
+    }
 
     @PostMapping("/apply")
     @OperLog(module = "领养管理", action = "提交领养申请")

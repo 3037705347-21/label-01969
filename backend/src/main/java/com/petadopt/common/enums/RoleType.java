@@ -16,6 +16,9 @@ public enum RoleType {
         this.name = name;
     }
 
+    public Integer getCode() { return code; }
+    public String getName() { return name; }
+
     public static String getNameByCode(Integer code) {
         for (RoleType type : values()) {
             if (type.getCode().equals(code)) {

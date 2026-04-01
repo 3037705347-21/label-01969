@@ -12,4 +12,11 @@ public class ReviewDTO {
     private Integer status;
     
     private String comment;
+
+    public Long getApplicationId() { return applicationId; }
+    public void setApplicationId(Long applicationId) { this.applicationId = applicationId; }
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
+    public String getComment() { return comment; }
+    public void setComment(String comment) { this.comment = comment; }
 }

@@ -3,7 +3,6 @@ package com.petadopt.controller;
 import com.petadopt.common.result.Result;
 import com.petadopt.service.MatchService;
 import com.petadopt.vo.AdopterMatchVO;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,10 +12,13 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/match")
-@RequiredArgsConstructor
 public class MatchController {
 
     private final MatchService matchService;
+
+    public MatchController(MatchService matchService) {
+        this.matchService = matchService;
+    }
 
     /**
      * 获取宠物的推荐领养人列表

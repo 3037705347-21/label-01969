@@ -7,15 +7,17 @@ import com.petadopt.dto.FollowUpDTO;
 import com.petadopt.service.FollowUpService;
 import com.petadopt.vo.FollowUpRecordVO;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/follow")
-@RequiredArgsConstructor
 public class FollowUpController {
 
     private final FollowUpService followUpService;
+
+    public FollowUpController(FollowUpService followUpService) {
+        this.followUpService = followUpService;
+    }
 
     @PostMapping("/submit")
     @OperLog(module = "跟进管理", action = "提交跟进记录")

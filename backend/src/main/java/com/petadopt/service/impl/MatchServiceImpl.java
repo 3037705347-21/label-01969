@@ -8,8 +8,8 @@ import com.petadopt.mapper.PetMapper;
 import com.petadopt.mapper.UserMapper;
 import com.petadopt.service.MatchService;
 import com.petadopt.vo.AdopterMatchVO;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,24 +21,28 @@ import java.util.stream.Collectors;
  * 领养匹配服务实现
  * 根据宠物的领养要求自动筛选匹配合适的领养人
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class MatchServiceImpl implements MatchService {
 
+    private static final Logger logger = LoggerFactory.getLogger(MatchServiceImpl.class);
     private final PetMapper petMapper;
     private final UserMapper userMapper;
+
+    public MatchServiceImpl(PetMapper petMapper, UserMapper userMapper) {
+        this.petMapper = petMapper;
+        this.userMapper = userMapper;
+    }
 
     @Override
     public List<AdopterMatchVO> matchAdoptersForPet(Long petId, Integer limit) {
         // 获取宠物信息
         Pet pet = petMapper.selectById(petId);
         if (pet == null) {
-            log.error("匹配领养人失败-宠物不存在: petId={}", petId);
+            logger.error("匹配领养人失败-宠物不存在: petId={}", petId);
             throw new BusinessException("宠物不存在");
         }
 
-        log.info("开始为宠物匹配领养人: petId={}, petName={}, requireExperience={}, allowSingleLiving={}", 
+        logger.info("开始为宠物匹配领养人: petId={}, petName={}, requireExperience={}, allowSingleLiving={}",
                 petId, pet.getName(), pet.getRequireExperience(), pet.getAllowSingleLiving());
 
         // 查询所有正常状态的领养人（roleType=3, status=1）
@@ -48,9 +52,9 @@ public class MatchServiceImpl implements MatchService {
                .eq(User::getDeleted, 0);   // 未删除
 
         List<User> adopters = userMapper.selectList(wrapper);
-        
+
         if (adopters.isEmpty()) {
-            log.info("没有找到符合条件的领养人: petId={}", petId);
+            logger.info("没有找到符合条件的领养人: petId={}", petId);
             return new ArrayList<>();
         }
 
@@ -61,7 +65,7 @@ public class MatchServiceImpl implements MatchService {
                 .limit(limit != null ? limit : 10)
                 .collect(Collectors.toList());
 
-        log.info("为宠物匹配领养人完成: petId={}, petName={}, candidateCount={}, resultCount={}", 
+        logger.info("为宠物匹配领养人完成: petId={}, petName={}, candidateCount={}, resultCount={}",
                 petId, pet.getName(), adopters.size(), matchResults.size());
         return matchResults;
     }
@@ -114,11 +118,11 @@ public class MatchServiceImpl implements MatchService {
         if (adopter.getLivingEnvironment() != null && !adopter.getLivingEnvironment().isEmpty()) {
             score += 10;
             reasons.add("已填写居住环境信息");
-            
+
             // 检查是否独居
             String env = adopter.getLivingEnvironment().toLowerCase();
             boolean seemsSingleLiving = env.contains("独居") || env.contains("一个人") || env.contains("单身");
-            
+
             if (pet.getAllowSingleLiving() != null && pet.getAllowSingleLiving() == 0) {
                 // 宠物不允许独居
                 if (seemsSingleLiving) {
@@ -137,7 +141,7 @@ public class MatchServiceImpl implements MatchService {
         if (pet.getLocation() != null && adopter.getAddress() != null) {
             String petLocation = pet.getLocation().toLowerCase();
             String adopterAddress = adopter.getAddress().toLowerCase();
-            
+
             // 简单的地区匹配：检查是否在同一城市
             if (isSameCity(petLocation, adopterAddress)) {
                 score += 15;
@@ -155,7 +159,7 @@ public class MatchServiceImpl implements MatchService {
         if (adopter.getAddress() != null && !adopter.getAddress().isEmpty()) completeness++;
         if (adopter.getOccupation() != null && !adopter.getOccupation().isEmpty()) completeness++;
         if (adopter.getPetExperience() != null && !adopter.getPetExperience().isEmpty()) completeness++;
-        
+
         score += completeness * 3;
         if (completeness >= 4) {
             reasons.add("资料完整度高");
@@ -163,10 +167,10 @@ public class MatchServiceImpl implements MatchService {
 
         // 确保分数在0-100之间
         score = Math.max(0, Math.min(100, score));
-        
+
         vo.setMatchScore(score);
         vo.setMatchReason(String.join("；", reasons));
-        
+
         return vo;
     }
 
@@ -176,13 +180,13 @@ public class MatchServiceImpl implements MatchService {
     private boolean isSameCity(String location1, String location2) {
         String[] cities = {"北京", "上海", "广州", "深圳", "杭州", "南京", "成都", "武汉", "西安", "重庆",
                 "天津", "苏州", "郑州", "长沙", "东莞", "沈阳", "青岛", "合肥", "佛山", "宁波"};
-        
+
         for (String city : cities) {
             if (location1.contains(city) && location2.contains(city)) {
                 return true;
             }
         }
-        
+
         // 检查区级匹配
         String[] districts = {"朝阳", "海淀", "浦东", "徐汇", "天河", "福田", "南山", "西湖"};
         for (String district : districts) {
@@ -190,7 +194,7 @@ public class MatchServiceImpl implements MatchService {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -198,9 +202,9 @@ public class MatchServiceImpl implements MatchService {
      * 判断是否同省
      */
     private boolean isSameProvince(String location1, String location2) {
-        String[] provinces = {"北京", "上海", "天津", "重庆", "广东", "江苏", "浙江", "山东", "河南", 
+        String[] provinces = {"北京", "上海", "天津", "重庆", "广东", "江苏", "浙江", "山东", "河南",
                 "四川", "湖北", "湖南", "河北", "福建", "陕西", "安徽", "辽宁", "江西", "云南", "广西"};
-        
+
         for (String province : provinces) {
             if (location1.contains(province) && location2.contains(province)) {
                 return true;

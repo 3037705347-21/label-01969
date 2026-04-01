@@ -4,15 +4,17 @@ import com.petadopt.common.result.PageResult;
 import com.petadopt.common.result.Result;
 import com.petadopt.entity.Message;
 import com.petadopt.service.MessageService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/message")
-@RequiredArgsConstructor
 public class MessageController {
 
     private final MessageService messageService;
+
+    public MessageController(MessageService messageService) {
+        this.messageService = messageService;
+    }
 
     @GetMapping("/list")
     public Result<PageResult<Message>> getMessageList(

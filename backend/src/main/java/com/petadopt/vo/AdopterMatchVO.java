@@ -2,41 +2,40 @@ package com.petadopt.vo;
 
 import lombok.Data;
 
-/**
- * 领养人匹配结果VO
- */
 @Data
 public class AdopterMatchVO {
-    /** 用户ID */
     private Long userId;
-    
-    /** 用户名 */
     private String username;
-    
-    /** 真实姓名 */
     private String realName;
-    
-    /** 手机号 */
     private String phone;
-    
-    /** 地址 */
     private String address;
-    
-    /** 职业 */
     private String occupation;
-    
-    /** 养宠经验 */
     private String petExperience;
-    
-    /** 居住环境 */
     private String livingEnvironment;
-    
-    /** 是否已认证 */
     private Boolean verified;
-    
-    /** 匹配分数 (0-100) */
     private Integer matchScore;
-    
-    /** 匹配说明 */
     private String matchReason;
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getRealName() { return realName; }
+    public void setRealName(String realName) { this.realName = realName; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    public String getOccupation() { return occupation; }
+    public void setOccupation(String occupation) { this.occupation = occupation; }
+    public String getPetExperience() { return petExperience; }
+    public void setPetExperience(String petExperience) { this.petExperience = petExperience; }
+    public String getLivingEnvironment() { return livingEnvironment; }
+    public void setLivingEnvironment(String livingEnvironment) { this.livingEnvironment = livingEnvironment; }
+    public Boolean getVerified() { return verified; }
+    public void setVerified(Boolean verified) { this.verified = verified; }
+    public Integer getMatchScore() { return matchScore; }
+    public void setMatchScore(Integer matchScore) { this.matchScore = matchScore; }
+    public String getMatchReason() { return matchReason; }
+    public void setMatchReason(String matchReason) { this.matchReason = matchReason; }
 }

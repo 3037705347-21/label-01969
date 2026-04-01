@@ -8,14 +8,17 @@ import com.petadopt.entity.Message;
 import com.petadopt.mapper.MessageMapper;
 import com.petadopt.service.MessageService;
 import com.petadopt.util.UserContext;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
-@Slf4j
+
 @Service
 public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> implements MessageService {
+
+    private static final Logger logger = LoggerFactory.getLogger(MessageServiceImpl.class);
 
     @Override
     public PageResult<Message> getMessageList(Integer type, Integer pageNum, Integer pageSize) {
@@ -29,7 +32,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         wrapper.orderByDesc(Message::getCreateTime);
 
         Page<Message> result = page(page, wrapper);
-        log.debug("查询消息列表: userId={}, type={}, total={}", userId, type, result.getTotal());
+        logger.debug("查询消息列表: userId={}, type={}, total={}", userId, type, result.getTotal());
         return PageResult.of(result);
     }
 
@@ -42,7 +45,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             update.setId(id);
             update.setIsRead(1);
             updateById(update);
-            log.debug("标记消息已读: userId={}, messageId={}", userId, id);
+            logger.debug("标记消息已读: userId={}, messageId={}", userId, id);
         }
     }
 
@@ -60,7 +63,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                 .set(Message::getIsRead, 1)
                 .update();
         
-        log.info("标记全部消息已读: userId={}, count={}", userId, count);
+        logger.info("标记全部消息已读: userId={}, count={}", userId, count);
     }
 
     @Override
@@ -82,6 +85,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         message.setCreateTime(LocalDateTime.now());
         save(message);
         
-        log.info("发送消息成功: targetUserId={}, messageId={}, title={}, type={}", userId, message.getId(), title, type);
+        logger.info("发送消息成功: targetUserId={}, messageId={}, title={}, type={}", userId, message.getId(), title, type);
     }
 }

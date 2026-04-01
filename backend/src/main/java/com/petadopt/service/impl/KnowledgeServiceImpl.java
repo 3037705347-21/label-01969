@@ -11,12 +11,15 @@ import com.petadopt.entity.Knowledge;
 import com.petadopt.mapper.KnowledgeMapper;
 import com.petadopt.service.KnowledgeService;
 import com.petadopt.util.UserContext;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-@Slf4j
+
 @Service
 public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge> implements KnowledgeService {
+
+    private static final Logger logger = LoggerFactory.getLogger(KnowledgeServiceImpl.class);
 
     @Override
     public void createKnowledge(KnowledgeDTO dto) {
@@ -28,20 +31,20 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         knowledge.setStatus(dto.getStatus() != null ? dto.getStatus() : 0);
         save(knowledge);
         
-        log.info("创建知识库文章成功: userId={}, articleId={}, title={}, category={}", userId, knowledge.getId(), knowledge.getTitle(), knowledge.getCategory());
+        logger.info("创建知识库文章成功: userId={}, articleId={}, title={}, category={}", userId, knowledge.getId(), knowledge.getTitle(), knowledge.getCategory());
     }
 
     @Override
     public void updateKnowledge(KnowledgeDTO dto) {
         Long userId = UserContext.getUserId();
         if (dto.getId() == null) {
-            log.error("更新知识库文章失败-ID为空: userId={}", userId);
+            logger.error("更新知识库文章失败-ID为空: userId={}", userId);
             throw new BusinessException("文章ID不能为空");
         }
         
         Knowledge exist = getById(dto.getId());
         if (exist == null) {
-            log.error("更新知识库文章失败-文章不存在: userId={}, articleId={}", userId, dto.getId());
+            logger.error("更新知识库文章失败-文章不存在: userId={}, articleId={}", userId, dto.getId());
             throw new BusinessException("文章不存在");
         }
         
@@ -49,14 +52,14 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         BeanUtil.copyProperties(dto, knowledge);
         updateById(knowledge);
         
-        log.info("更新知识库文章成功: userId={}, articleId={}, title={}", userId, dto.getId(), dto.getTitle());
+        logger.info("更新知识库文章成功: userId={}, articleId={}, title={}", userId, dto.getId(), dto.getTitle());
     }
 
     @Override
     public Knowledge getKnowledgeDetail(Long id) {
         Knowledge knowledge = getById(id);
         if (knowledge == null) {
-            log.warn("获取知识库文章详情失败-文章不存在: articleId={}", id);
+            logger.warn("获取知识库文章详情失败-文章不存在: articleId={}", id);
             throw new BusinessException("文章不存在");
         }
         
@@ -84,7 +87,7 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         wrapper.orderByDesc(Knowledge::getCreateTime);
         
         Page<Knowledge> result = page(page, wrapper);
-        log.debug("查询知识库文章列表: category={}, status={}, total={}", category, status, result.getTotal());
+        logger.debug("查询知识库文章列表: category={}, status={}, total={}", category, status, result.getTotal());
         return PageResult.of(result);
     }
 
@@ -93,11 +96,11 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         Long userId = UserContext.getUserId();
         Knowledge knowledge = getById(id);
         if (knowledge == null) {
-            log.error("删除知识库文章失败-文章不存在: userId={}, articleId={}", userId, id);
+            logger.error("删除知识库文章失败-文章不存在: userId={}, articleId={}", userId, id);
             throw new BusinessException("文章不存在");
         }
         
         removeById(id);
-        log.info("删除知识库文章成功: userId={}, articleId={}, title={}", userId, id, knowledge.getTitle());
+        logger.info("删除知识库文章成功: userId={}, articleId={}, title={}", userId, id, knowledge.getTitle());
     }
 }

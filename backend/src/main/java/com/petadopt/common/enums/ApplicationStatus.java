@@ -2,7 +2,6 @@ package com.petadopt.common.enums;
 
 import lombok.Getter;
 
-@Getter
 public enum ApplicationStatus {
     PENDING(0, "进行中"),
     SUCCESS(1, "领养成功"),
@@ -15,6 +14,9 @@ public enum ApplicationStatus {
         this.code = code;
         this.name = name;
     }
+
+    public Integer getCode() { return code; }
+    public String getName() { return name; }
 
     public static String getNameByCode(Integer code) {
         for (ApplicationStatus status : values()) {
