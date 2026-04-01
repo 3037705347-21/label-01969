@@ -40,4 +40,31 @@ public class FollowUpRecord {
     
     @TableLogic
     private Integer deleted;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getPetId() { return petId; }
+    public void setPetId(Long petId) { this.petId = petId; }
+    public Long getAdopterId() { return adopterId; }
+    public void setAdopterId(Long adopterId) { this.adopterId = adopterId; }
+    public Long getApplicationId() { return applicationId; }
+    public void setApplicationId(Long applicationId) { this.applicationId = applicationId; }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+    public String getPhotos() { return photos; }
+    public void setPhotos(String photos) { this.photos = photos; }
+    public String getVideos() { return videos; }
+    public void setVideos(String videos) { this.videos = videos; }
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
+    public String getAdminComment() { return adminComment; }
+    public void setAdminComment(String adminComment) { this.adminComment = adminComment; }
+    public LocalDateTime getDueDate() { return dueDate; }
+    public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+    public LocalDateTime getSubmitTime() { return submitTime; }
+    public void setSubmitTime(LocalDateTime submitTime) { this.submitTime = submitTime; }
+    public LocalDateTime getCreateTime() { return createTime; }
+    public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
+    public Integer getDeleted() { return deleted; }
+    public void setDeleted(Integer deleted) { this.deleted = deleted; }
 }

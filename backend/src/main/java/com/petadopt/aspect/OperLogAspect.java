@@ -5,25 +5,28 @@ import com.petadopt.entity.OperationLog;
 import com.petadopt.mapper.OperationLogMapper;
 import com.petadopt.util.UserContext;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 
-@Slf4j
 @Aspect
 @Component
-@RequiredArgsConstructor
 public class OperLogAspect {
 
+    private static final Logger logger = LoggerFactory.getLogger(OperLogAspect.class);
     private final OperationLogMapper operationLogMapper;
+
+    public OperLogAspect(OperationLogMapper operationLogMapper) {
+        this.operationLogMapper = operationLogMapper;
+    }
 
     @Around("@annotation(operLog)")
     public Object around(ProceedingJoinPoint point, OperLog operLog) throws Throwable {
@@ -39,7 +42,7 @@ public class OperLogAspect {
             try {
                 saveLog(point, operLog, resultStr);
             } catch (Exception e) {
-                log.error("保存操作日志失败", e);
+                logger.error("保存操作日志失败", e);
             }
         }
     }
@@ -47,44 +50,38 @@ public class OperLogAspect {
     private void saveLog(ProceedingJoinPoint point, OperLog operLog, String resultStr) {
         MethodSignature signature = (MethodSignature) point.getSignature();
         
-        OperationLog log = new OperationLog();
-        log.setUserId(UserContext.getUserId());
-        log.setModule(operLog.module());
-        log.setAction(operLog.action());
+        OperationLog operLogEntity = new OperationLog();
+        operLogEntity.setUserId(UserContext.getUserId());
+        operLogEntity.setModule(operLog.module());
+        operLogEntity.setAction(operLog.action());
         
         Object[] args = point.getArgs();
         if (args != null && args.length > 0) {
             try {
-                log.setParams(JSONUtil.toJsonStr(args));
+                operLogEntity.setParams(JSONUtil.toJsonStr(args));
             } catch (Exception e) {
-                log.setParams("参数序列化失败");
+                operLogEntity.setParams("无法序列化参数");
             }
         }
-        
-        log.setResult(resultStr);
-        log.setIp(getIpAddress());
-        log.setCreateTime(LocalDateTime.now());
-        
-        operationLogMapper.insert(log);
+        operLogEntity.setResult(resultStr);
+        operLogEntity.setIp(getIp());
+        operLogEntity.setCreateTime(LocalDateTime.now());
+        operationLogMapper.insert(operLogEntity);
     }
 
-    private String getIpAddress() {
-        try {
-            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            if (attributes != null) {
-                HttpServletRequest request = attributes.getRequest();
-                String ip = request.getHeader("X-Forwarded-For");
-                if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-                    ip = request.getHeader("X-Real-IP");
-                }
-                if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-                    ip = request.getRemoteAddr();
-                }
-                return ip;
-            }
-        } catch (Exception e) {
-            // ignore
+    private String getIp() {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes == null) {
+            return "127.0.0.1";
         }
-        return "unknown";
+        HttpServletRequest request = attributes.getRequest();
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
     }
 }

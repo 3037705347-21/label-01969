@@ -20,4 +20,13 @@ public class AdoptionApplyDTO {
     
     @Pattern(regexp = "^$|^(https?://|/uploads/).+", message = "收入证明链接格式不正确")
     private String incomeProof;
+
+    public Long getPetId() { return petId; }
+    public void setPetId(Long petId) { this.petId = petId; }
+    public String getSelfIntroduction() { return selfIntroduction; }
+    public void setSelfIntroduction(String selfIntroduction) { this.selfIntroduction = selfIntroduction; }
+    public String getResidenceProof() { return residenceProof; }
+    public void setResidenceProof(String residenceProof) { this.residenceProof = residenceProof; }
+    public String getIncomeProof() { return incomeProof; }
+    public void setIncomeProof(String incomeProof) { this.incomeProof = incomeProof; }
 }

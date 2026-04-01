@@ -21,8 +21,8 @@ import com.petadopt.service.AdoptionService;
 import com.petadopt.service.MessageService;
 import com.petadopt.util.UserContext;
 import com.petadopt.vo.AdoptionApplicationVO;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -30,14 +30,21 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Slf4j
+
 @Service
-@RequiredArgsConstructor
+@Transactional
 public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, AdoptionApplication> implements AdoptionService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AdoptionServiceImpl.class);
     private final PetMapper petMapper;
     private final UserMapper userMapper;
     private final MessageService messageService;
+
+    public AdoptionServiceImpl(PetMapper petMapper, UserMapper userMapper, MessageService messageService) {
+        this.petMapper = petMapper;
+        this.userMapper = userMapper;
+        this.messageService = messageService;
+    }
 
     @Override
     @Transactional
@@ -45,17 +52,17 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
         Long userId = UserContext.getUserId();
         Integer roleType = UserContext.getRoleType();
         if (!RoleType.ADOPTER.getCode().equals(roleType)) {
-            log.error("提交领养申请权限不足: userId={}, roleType={}", userId, roleType);
+            logger.error("提交领养申请权限不足: userId={}, roleType={}", userId, roleType);
             throw new BusinessException("只有领养人可以提交领养申请");
         }
 
         Pet pet = petMapper.selectById(dto.getPetId());
         if (pet == null) {
-            log.error("提交领养申请失败-宠物不存在: userId={}, petId={}", userId, dto.getPetId());
+            logger.error("提交领养申请失败-宠物不存在: userId={}, petId={}", userId, dto.getPetId());
             throw new BusinessException("宠物不存在");
         }
         if (!PetStatus.AVAILABLE.getCode().equals(pet.getStatus())) {
-            log.error("提交领养申请失败-宠物不可领养: userId={}, petId={}, status={}", userId, dto.getPetId(), pet.getStatus());
+            logger.error("提交领养申请失败-宠物不可领养: userId={}, petId={}, status={}", userId, dto.getPetId(), pet.getStatus());
             throw new BusinessException("该宠物当前不可领养");
         }
 
@@ -65,7 +72,7 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
                 .eq(AdoptionApplication::getFinalStatus, ApplicationStatus.PENDING.getCode())
                 .count();
         if (count > 0) {
-            log.error("提交领养申请失败-重复申请: userId={}, petId={}", userId, dto.getPetId());
+            logger.error("提交领养申请失败-重复申请: userId={}, petId={}", userId, dto.getPetId());
             throw new BusinessException("您已提交过该宠物的领养申请");
         }
 
@@ -87,7 +94,7 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
         messageService.sendMessage(pet.getPublisherId(), "新的领养申请",
                 "您发布的宠物\"" + pet.getName() + "\"收到了新的领养申请，请及时处理。", 2);
 
-        log.info("提交领养申请成功: userId={}, applicationId={}, petId={}, petName={}", userId, application.getId(), dto.getPetId(), pet.getName());
+        logger.info("提交领养申请成功: userId={}, applicationId={}, petId={}, petName={}", userId, application.getId(), dto.getPetId(), pet.getName());
     }
 
     @Override
@@ -148,13 +155,13 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
         Long userId = UserContext.getUserId();
         AdoptionApplication application = getById(dto.getApplicationId());
         if (application == null) {
-            log.error("救助方审核失败-申请不存在: userId={}, applicationId={}", userId, dto.getApplicationId());
+            logger.error("救助方审核失败-申请不存在: userId={}, applicationId={}", userId, dto.getApplicationId());
             throw new BusinessException("申请不存在");
         }
 
         Pet pet = petMapper.selectById(application.getPetId());
         if (pet == null || !pet.getPublisherId().equals(userId)) {
-            log.error("救助方审核权限不足: userId={}, applicationId={}, publisherId={}", userId, dto.getApplicationId(), pet != null ? pet.getPublisherId() : null);
+            logger.error("救助方审核权限不足: userId={}, applicationId={}, publisherId={}", userId, dto.getApplicationId(), pet != null ? pet.getPublisherId() : null);
             throw new BusinessException("无权审核此申请");
         }
 
@@ -170,7 +177,7 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
             updatePet.setId(pet.getId());
             updatePet.setStatus(PetStatus.AVAILABLE.getCode());
             petMapper.updateById(updatePet);
-            log.info("救助方审核拒绝: userId={}, applicationId={}, petId={}, applicantId={}, comment={}", userId, dto.getApplicationId(), pet.getId(), application.getApplicantId(), dto.getComment());
+            logger.info("救助方审核拒绝: userId={}, applicationId={}, petId={}, applicantId={}, comment={}", userId, dto.getApplicationId(), pet.getId(), application.getApplicantId(), dto.getComment());
         }
 
         updateById(update);
@@ -183,9 +190,9 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
         if (dto.getStatus() == 1) {
             User applicant = userMapper.selectById(application.getApplicantId());
             String applicantName = applicant != null ? (applicant.getRealName() != null ? applicant.getRealName() : applicant.getUsername()) : "未知";
-            notifyAdmins("新的领养申请待复核", 
+            notifyAdmins("新的领养申请待复核",
                     "宠物\"" + pet.getName() + "\"的领养申请已通过救助方初审，申请人：" + applicantName + "，请及时复核。");
-            log.info("救助方审核通过: userId={}, applicationId={}, petId={}, applicantId={}", userId, dto.getApplicationId(), pet.getId(), application.getApplicantId());
+            logger.info("救助方审核通过: userId={}, applicationId={}, petId={}, applicantId={}", userId, dto.getApplicationId(), pet.getId(), application.getApplicantId());
         }
     }
 
@@ -195,12 +202,12 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
         Long userId = UserContext.getUserId();
         AdoptionApplication application = getById(dto.getApplicationId());
         if (application == null) {
-            log.error("管理员复核失败-申请不存在: userId={}, applicationId={}", userId, dto.getApplicationId());
+            logger.error("管理员复核失败-申请不存在: userId={}, applicationId={}", userId, dto.getApplicationId());
             throw new BusinessException("申请不存在");
         }
 
         if (application.getRescueReviewStatus() != 1) {
-            log.error("管理员复核失败-未通过救助方审核: userId={}, applicationId={}, rescueReviewStatus={}", userId, dto.getApplicationId(), application.getRescueReviewStatus());
+            logger.error("管理员复核失败-未通过救助方审核: userId={}, applicationId={}, rescueReviewStatus={}", userId, dto.getApplicationId(), application.getRescueReviewStatus());
             throw new BusinessException("该申请尚未通过救助方审核");
         }
 
@@ -220,9 +227,9 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
                 updatePet.setStatus(PetStatus.AVAILABLE.getCode());
                 petMapper.updateById(updatePet);
             }
-            log.info("管理员复核拒绝: userId={}, applicationId={}, applicantId={}, comment={}", userId, dto.getApplicationId(), application.getApplicantId(), dto.getComment());
+            logger.info("管理员复核拒绝: userId={}, applicationId={}, applicantId={}, comment={}", userId, dto.getApplicationId(), application.getApplicantId(), dto.getComment());
         } else {
-            log.info("管理员复核通过: userId={}, applicationId={}, applicantId={}", userId, dto.getApplicationId(), application.getApplicantId());
+            logger.info("管理员复核通过: userId={}, applicationId={}, applicantId={}", userId, dto.getApplicationId(), application.getApplicantId());
         }
 
         updateById(update);
@@ -231,7 +238,7 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
         // 通知领养人
         messageService.sendMessage(application.getApplicantId(), "领养申请复核结果",
                 "您的领养申请管理员复核" + statusText + "。" + (StringUtils.hasText(dto.getComment()) ? "备注：" + dto.getComment() : ""), 2);
-        
+
         // 通知救助方
         if (pet != null) {
             User applicant = userMapper.selectById(application.getApplicantId());
@@ -247,7 +254,7 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
         Long userId = UserContext.getUserId();
         AdoptionApplication application = getById(dto.getApplicationId());
         if (application == null) {
-            log.error("更新家访状态失败-申请不存在: userId={}, applicationId={}", userId, dto.getApplicationId());
+            logger.error("更新家访状态失败-申请不存在: userId={}, applicationId={}", userId, dto.getApplicationId());
             throw new BusinessException("申请不存在");
         }
 
@@ -267,7 +274,7 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
             // 通知领养人
             messageService.sendMessage(application.getApplicantId(), "家访安排通知",
                     "您的领养申请已安排家访，请保持电话畅通。" + (StringUtils.hasText(dto.getComment()) ? "备注：" + dto.getComment() : ""), 2);
-            log.info("安排家访: userId={}, applicationId={}, applicantId={}, applicantName={}", userId, dto.getApplicationId(), application.getApplicantId(), applicantName);
+            logger.info("安排家访: userId={}, applicationId={}, applicantId={}, applicantName={}", userId, dto.getApplicationId(), application.getApplicantId(), applicantName);
         } else if (dto.getStatus() == 2) {
             homeVisitStatusText = "家访通过";
             update.setFinalStatus(ApplicationStatus.SUCCESS.getCode());
@@ -281,7 +288,7 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
 
             messageService.sendMessage(application.getApplicantId(), "领养成功",
                     "恭喜您，领养申请已通过！请按照约定时间前往领取您的新伙伴。", 2);
-            log.info("家访通过-领养成功: userId={}, applicationId={}, applicantId={}, applicantName={}, petId={}, petName={}", 
+            logger.info("家访通过-领养成功: userId={}, applicationId={}, applicantId={}, applicantName={}, petId={}, petName={}",
                     userId, dto.getApplicationId(), application.getApplicantId(), applicantName, application.getPetId(), pet != null ? pet.getName() : "unknown");
         } else if (dto.getStatus() == 3) {
             homeVisitStatusText = "家访不通过";
@@ -295,7 +302,7 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
 
             messageService.sendMessage(application.getApplicantId(), "家访未通过",
                     "很遗憾，您的领养申请家访未通过。" + (StringUtils.hasText(dto.getComment()) ? "原因：" + dto.getComment() : ""), 2);
-            log.info("家访不通过: userId={}, applicationId={}, applicantId={}, applicantName={}, comment={}", 
+            logger.info("家访不通过: userId={}, applicationId={}, applicantId={}, applicantName={}, comment={}",
                     userId, dto.getApplicationId(), application.getApplicantId(), applicantName, dto.getComment());
         }
 
@@ -312,7 +319,7 @@ public class AdoptionServiceImpl extends ServiceImpl<AdoptionApplicationMapper, 
     public AdoptionApplicationVO getApplicationDetail(Long id) {
         AdoptionApplication application = getById(id);
         if (application == null) {
-            log.warn("获取申请详情失败-申请不存在: applicationId={}", id);
+            logger.warn("获取申请详情失败-申请不存在: applicationId={}", id);
             throw new BusinessException("申请不存在");
         }
         return convertToVO(application);

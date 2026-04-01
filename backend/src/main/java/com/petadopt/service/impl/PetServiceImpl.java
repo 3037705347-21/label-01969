@@ -18,26 +18,29 @@ import com.petadopt.mapper.UserMapper;
 import com.petadopt.service.PetService;
 import com.petadopt.util.UserContext;
 import com.petadopt.vo.PetVO;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetService {
 
+    private static final Logger logger = LoggerFactory.getLogger(PetServiceImpl.class);
     private final UserMapper userMapper;
+
+    public PetServiceImpl(UserMapper userMapper) {
+        this.userMapper = userMapper;
+    }
 
     @Override
     public void createPet(PetDTO dto) {
         Long userId = UserContext.getUserId();
         Integer roleType = UserContext.getRoleType();
         if (!RoleType.RESCUER.getCode().equals(roleType) && !RoleType.ADMIN.getCode().equals(roleType)) {
-            log.error("发布宠物权限不足: userId={}, roleType={}", userId, roleType);
+            logger.error("发布宠物权限不足: userId={}, roleType={}", userId, roleType);
             throw new BusinessException("只有救助方可以发布宠物信息");
         }
 
@@ -45,7 +48,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         BeanUtil.copyProperties(dto, pet);
         pet.setPublisherId(userId);
         pet.setStatus(PetStatus.AVAILABLE.getCode());
-        
+
         if (dto.getPersonalityTags() != null) {
             pet.setPersonalityTags(JSONUtil.toJsonStr(dto.getPersonalityTags()));
         }
@@ -57,32 +60,32 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         }
 
         save(pet);
-        log.info("发布宠物信息成功: userId={}, petId={}, name={}", userId, pet.getId(), pet.getName());
+        logger.info("发布宠物信息成功: userId={}, petId={}, name={}", userId, pet.getId(), pet.getName());
     }
 
     @Override
     public void updatePet(PetDTO dto) {
         Long userId = UserContext.getUserId();
         if (dto.getId() == null) {
-            log.error("更新宠物失败-ID为空: userId={}", userId);
+            logger.error("更新宠物失败-ID为空: userId={}", userId);
             throw new BusinessException("宠物ID不能为空");
         }
 
         Pet existPet = getById(dto.getId());
         if (existPet == null) {
-            log.error("更新宠物失败-宠物不存在: userId={}, petId={}", userId, dto.getId());
+            logger.error("更新宠物失败-宠物不存在: userId={}, petId={}", userId, dto.getId());
             throw new BusinessException("宠物不存在");
         }
 
         Integer roleType = UserContext.getRoleType();
         if (!existPet.getPublisherId().equals(userId) && !RoleType.ADMIN.getCode().equals(roleType)) {
-            log.error("更新宠物权限不足: userId={}, petId={}, publisherId={}", userId, dto.getId(), existPet.getPublisherId());
+            logger.error("更新宠物权限不足: userId={}, petId={}, publisherId={}", userId, dto.getId(), existPet.getPublisherId());
             throw new BusinessException("无权修改此宠物信息");
         }
 
         Pet pet = new Pet();
         BeanUtil.copyProperties(dto, pet);
-        
+
         if (dto.getPersonalityTags() != null) {
             pet.setPersonalityTags(JSONUtil.toJsonStr(dto.getPersonalityTags()));
         }
@@ -94,14 +97,14 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         }
 
         updateById(pet);
-        log.info("更新宠物信息成功: userId={}, petId={}", userId, dto.getId());
+        logger.info("更新宠物信息成功: userId={}, petId={}", userId, dto.getId());
     }
 
     @Override
     public PetVO getPetDetail(Long id) {
         Pet pet = getById(id);
         if (pet == null) {
-            log.warn("获取宠物详情失败-宠物不存在: petId={}", id);
+            logger.warn("获取宠物详情失败-宠物不存在: petId={}", id);
             throw new BusinessException("宠物不存在");
         }
         return convertToVO(pet);
@@ -150,13 +153,13 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         Long userId = UserContext.getUserId();
         Pet pet = getById(id);
         if (pet == null) {
-            log.error("更新宠物状态失败-宠物不存在: userId={}, petId={}", userId, id);
+            logger.error("更新宠物状态失败-宠物不存在: userId={}, petId={}", userId, id);
             throw new BusinessException("宠物不存在");
         }
 
         Integer roleType = UserContext.getRoleType();
         if (!pet.getPublisherId().equals(userId) && !RoleType.ADMIN.getCode().equals(roleType)) {
-            log.error("更新宠物状态权限不足: userId={}, petId={}, publisherId={}", userId, id, pet.getPublisherId());
+            logger.error("更新宠物状态权限不足: userId={}, petId={}, publisherId={}", userId, id, pet.getPublisherId());
             throw new BusinessException("无权修改此宠物状态");
         }
 
@@ -166,7 +169,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         updatePet.setStatus(status);
         updateById(updatePet);
 
-        log.info("更新宠物状态成功: userId={}, petId={}, oldStatus={}, newStatus={}", userId, id, oldStatus, status);
+        logger.info("更新宠物状态成功: userId={}, petId={}, oldStatus={}, newStatus={}", userId, id, oldStatus, status);
     }
 
     @Override
@@ -174,18 +177,18 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         Long userId = UserContext.getUserId();
         Pet pet = getById(id);
         if (pet == null) {
-            log.error("删除宠物失败-宠物不存在: userId={}, petId={}", userId, id);
+            logger.error("删除宠物失败-宠物不存在: userId={}, petId={}", userId, id);
             throw new BusinessException("宠物不存在");
         }
 
         Integer roleType = UserContext.getRoleType();
         if (!pet.getPublisherId().equals(userId) && !RoleType.ADMIN.getCode().equals(roleType)) {
-            log.error("删除宠物权限不足: userId={}, petId={}, publisherId={}", userId, id, pet.getPublisherId());
+            logger.error("删除宠物权限不足: userId={}, petId={}, publisherId={}", userId, id, pet.getPublisherId());
             throw new BusinessException("无权删除此宠物");
         }
 
         removeById(id);
-        log.info("删除宠物成功: userId={}, petId={}, petName={}", userId, id, pet.getName());
+        logger.info("删除宠物成功: userId={}, petId={}, petName={}", userId, id, pet.getName());
     }
 
     @Override

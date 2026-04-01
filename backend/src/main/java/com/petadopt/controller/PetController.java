@@ -8,15 +8,17 @@ import com.petadopt.dto.PetQueryDTO;
 import com.petadopt.service.PetService;
 import com.petadopt.vo.PetVO;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/pet")
-@RequiredArgsConstructor
 public class PetController {
 
     private final PetService petService;
+
+    public PetController(PetService petService) {
+        this.petService = petService;
+    }
 
     @PostMapping("/create")
     @OperLog(module = "宠物管理", action = "发布宠物")

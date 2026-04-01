@@ -7,17 +7,20 @@ import com.petadopt.util.JwtUtil;
 import com.petadopt.util.UserContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
-@RequiredArgsConstructor
 public class AuthInterceptor implements HandlerInterceptor {
 
     private final JwtUtil jwtUtil;
     private final UserMapper userMapper;
+
+    public AuthInterceptor(JwtUtil jwtUtil, UserMapper userMapper) {
+        this.jwtUtil = jwtUtil;
+        this.userMapper = userMapper;
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {

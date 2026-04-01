@@ -18,50 +18,54 @@ import com.petadopt.util.JwtUtil;
 import com.petadopt.util.UserContext;
 import com.petadopt.vo.LoginVO;
 import com.petadopt.vo.UserVO;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-@Slf4j
+
 @Service
-@RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
     private final JwtUtil jwtUtil;
+
+    public UserServiceImpl(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
     public LoginVO login(LoginDTO dto) {
         User user = lambdaQuery()
                 .eq(User::getUsername, dto.getUsername())
                 .one();
-        
+
         if (user == null) {
-            log.error("登录失败-用户不存在: username={}", dto.getUsername());
+            logger.error("登录失败-用户不存在: username={}", dto.getUsername());
             throw new BusinessException("用户名或密码错误");
         }
-        
+
         String encryptPwd = DigestUtil.md5Hex(dto.getPassword());
         if (!encryptPwd.equals(user.getPassword())) {
-            log.error("登录失败-密码错误: username={}, userId={}", dto.getUsername(), user.getId());
+            logger.error("登录失败-密码错误: username={}, userId={}", dto.getUsername(), user.getId());
             throw new BusinessException("用户名或密码错误");
         }
-        
+
         if (user.getStatus() == 0) {
-            log.error("登录失败-账号已禁用: username={}, userId={}", dto.getUsername(), user.getId());
+            logger.error("登录失败-账号已禁用: username={}, userId={}", dto.getUsername(), user.getId());
             throw new BusinessException("账号已被禁用");
         }
         if (user.getStatus() == 2) {
-            log.error("登录失败-用户在黑名单: username={}, userId={}", dto.getUsername(), user.getId());
+            logger.error("登录失败-用户在黑名单: username={}, userId={}", dto.getUsername(), user.getId());
             throw new BusinessException("您已被加入黑名单");
         }
-        
+
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRoleType());
-        
+
         LoginVO vo = new LoginVO();
         vo.setToken(token);
         vo.setUserInfo(convertToVO(user));
-        
-        log.info("用户登录成功: username={}, userId={}, roleType={}", user.getUsername(), user.getId(), user.getRoleType());
+
+        logger.info("用户登录成功: username={}, userId={}, roleType={}", user.getUsername(), user.getId(), user.getRoleType());
         return vo;
     }
 
@@ -71,26 +75,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(User::getUsername, dto.getUsername())
                 .count();
         if (count > 0) {
-            log.error("注册失败-用户名已存在: username={}", dto.getUsername());
+            logger.error("注册失败-用户名已存在: username={}", dto.getUsername());
             throw new BusinessException("用户名已存在");
         }
-        
+
         count = lambdaQuery()
                 .eq(User::getPhone, dto.getPhone())
                 .count();
         if (count > 0) {
-            log.error("注册失败-手机号已注册: phone={}", dto.getPhone());
+            logger.error("注册失败-手机号已注册: phone={}", dto.getPhone());
             throw new BusinessException("手机号已被注册");
         }
-        
+
         User user = new User();
         BeanUtil.copyProperties(dto, user);
         user.setPassword(DigestUtil.md5Hex(dto.getPassword()));
         user.setStatus(1);
         user.setVerifyStatus(0);
-        
+
         save(user);
-        log.info("用户注册成功: username={}, userId={}, roleType={}", user.getUsername(), user.getId(), user.getRoleType());
+        logger.info("用户注册成功: username={}, userId={}, roleType={}", user.getUsername(), user.getId(), user.getRoleType());
     }
 
     @Override
@@ -104,17 +108,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Long currentUserId = UserContext.getUserId();
         User existUser = getById(currentUserId);
         if (existUser == null) {
-            log.error("更新用户信息失败-用户不存在: userId={}", currentUserId);
+            logger.error("更新用户信息失败-用户不存在: userId={}", currentUserId);
             throw new BusinessException("用户不存在");
         }
-        
+
         user.setId(currentUserId);
         user.setPassword(null);
         user.setStatus(null);
         user.setRoleType(null);
-        
+
         updateById(user);
-        log.info("用户信息更新成功: userId={}", currentUserId);
+        logger.info("用户信息更新成功: userId={}", currentUserId);
     }
 
     @Override
@@ -122,10 +126,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Long currentUserId = UserContext.getUserId();
         User existUser = getById(currentUserId);
         if (existUser == null) {
-            log.error("提交认证失败-用户不存在: userId={}", currentUserId);
+            logger.error("提交认证失败-用户不存在: userId={}", currentUserId);
             throw new BusinessException("用户不存在");
         }
-        
+
         User updateUser = new User();
         updateUser.setId(currentUserId);
         updateUser.setRealName(dto.getRealName());
@@ -137,16 +141,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         updateUser.setOrgName(dto.getOrgName());
         updateUser.setOrgLicense(dto.getOrgLicense());
         updateUser.setVerifyStatus(1);
-        
+
         updateById(updateUser);
-        log.info("用户提交实名认证成功: userId={}, realName={}", currentUserId, dto.getRealName());
+        logger.info("用户提交实名认证成功: userId={}, realName={}", currentUserId, dto.getRealName());
     }
 
     @Override
     public PageResult<UserVO> getUserList(Integer roleType, Integer status, Integer pageNum, Integer pageSize) {
         Page<User> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-        
+
         if (roleType != null) {
             wrapper.eq(User::getRoleType, roleType);
         }
@@ -154,13 +158,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             wrapper.eq(User::getStatus, status);
         }
         wrapper.orderByDesc(User::getCreateTime);
-        
+
         Page<User> result = page(page, wrapper);
-        
+
         Page<UserVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
         voPage.setRecords(result.getRecords().stream().map(this::convertToVO).toList());
-        
-        log.debug("查询用户列表: roleType={}, status={}, total={}", roleType, status, result.getTotal());
+
+        logger.debug("查询用户列表: roleType={}, status={}, total={}", roleType, status, result.getTotal());
         return PageResult.of(voPage);
     }
 
@@ -169,17 +173,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Long operatorId = UserContext.getUserId();
         User user = getById(userId);
         if (user == null) {
-            log.error("更新用户状态失败-用户不存在: operatorId={}, targetUserId={}", operatorId, userId);
+            logger.error("更新用户状态失败-用户不存在: operatorId={}, targetUserId={}", operatorId, userId);
             throw new BusinessException("用户不存在");
         }
-        
+
         Integer oldStatus = user.getStatus();
         User updateUser = new User();
         updateUser.setId(userId);
         updateUser.setStatus(status);
         updateById(updateUser);
-        
-        log.info("更新用户状态成功: operatorId={}, targetUserId={}, username={}, oldStatus={}, newStatus={}", operatorId, userId, user.getUsername(), oldStatus, status);
+
+        logger.info("更新用户状态成功: operatorId={}, targetUserId={}, username={}, oldStatus={}, newStatus={}", operatorId, userId, user.getUsername(), oldStatus, status);
     }
 
     private UserVO convertToVO(User user) {

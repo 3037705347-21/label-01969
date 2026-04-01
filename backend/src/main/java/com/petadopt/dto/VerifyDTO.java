@@ -33,4 +33,21 @@ public class VerifyDTO {
     
     @Pattern(regexp = "^$|^(https?://|/uploads/).+", message = "机构资质链接格式不正确")
     private String orgLicense;
+
+    public String getRealName() { return realName; }
+    public void setRealName(String realName) { this.realName = realName; }
+    public String getIdCard() { return idCard; }
+    public void setIdCard(String idCard) { this.idCard = idCard; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    public String getOccupation() { return occupation; }
+    public void setOccupation(String occupation) { this.occupation = occupation; }
+    public String getPetExperience() { return petExperience; }
+    public void setPetExperience(String petExperience) { this.petExperience = petExperience; }
+    public String getLivingEnvironment() { return livingEnvironment; }
+    public void setLivingEnvironment(String livingEnvironment) { this.livingEnvironment = livingEnvironment; }
+    public String getOrgName() { return orgName; }
+    public void setOrgName(String orgName) { this.orgName = orgName; }
+    public String getOrgLicense() { return orgLicense; }
+    public void setOrgLicense(String orgLicense) { this.orgLicense = orgLicense; }
 }

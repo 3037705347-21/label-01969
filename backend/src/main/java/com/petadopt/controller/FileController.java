@@ -5,12 +5,12 @@ import cn.hutool.core.util.IdUtil;
 import com.petadopt.common.exception.BusinessException;
 import com.petadopt.common.result.Result;
 import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -22,10 +22,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/file")
 public class FileController {
+
+    private static final Logger logger = LoggerFactory.getLogger(FileController.class);
 
     @Value("${file.upload-path}")
     private String uploadPath;
@@ -43,9 +44,9 @@ public class FileController {
         uploadDir = Paths.get(uploadPath).toAbsolutePath().normalize();
         try {
             Files.createDirectories(uploadDir);
-            log.info("上传目录初始化成功: {}", uploadDir);
+            logger.info("上传目录初始化成功: {}", uploadDir);
         } catch (IOException e) {
-            log.error("创建上传目录失败: {}", uploadDir, e);
+            logger.error("创建上传目录失败: {}", uploadDir, e);
         }
     }
 
@@ -85,10 +86,10 @@ public class FileController {
                 Files.copy(inputStream, targetFile, StandardCopyOption.REPLACE_EXISTING);
             }
             
-            log.info("文件上传成功: {}, 大小: {} bytes", relativePath, file.getSize());
+            logger.info("文件上传成功: {}, 大小: {} bytes", relativePath, file.getSize());
             return Result.success("/uploads/" + relativePath);
         } catch (IOException e) {
-            log.error("文件上传失败: {}", e.getMessage(), e);
+            logger.error("文件上传失败: {}", e.getMessage(), e);
             throw new BusinessException("文件上传失败: " + e.getMessage());
         }
     }

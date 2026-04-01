@@ -6,19 +6,27 @@ import java.util.List;
 
 @Data
 public class PageResult<T> {
-    private List<T> records;
+    private List<T> list;
     private Long total;
     private Long pages;
-    private Long current;
-    private Long size;
+    private Long pageNum;
+    private Long pageSize;
 
     public static <T> PageResult<T> of(IPage<T> page) {
         PageResult<T> result = new PageResult<>();
-        result.setRecords(page.getRecords());
-        result.setTotal(page.getTotal());
-        result.setPages(page.getPages());
-        result.setCurrent(page.getCurrent());
-        result.setSize(page.getSize());
+        result.list = page.getRecords();
+        result.total = page.getTotal();
+        result.pages = page.getPages();
+        result.pageNum = page.getCurrent();
+        result.pageSize = page.getSize();
         return result;
+    }
+
+    public List<T> getList() {
+        return list;
+    }
+
+    public long getTotal() {
+        return total != null ? total : 0;
     }
 }

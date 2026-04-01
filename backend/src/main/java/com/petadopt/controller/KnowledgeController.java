@@ -7,15 +7,17 @@ import com.petadopt.dto.KnowledgeDTO;
 import com.petadopt.entity.Knowledge;
 import com.petadopt.service.KnowledgeService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/knowledge")
-@RequiredArgsConstructor
 public class KnowledgeController {
 
     private final KnowledgeService knowledgeService;
+
+    public KnowledgeController(KnowledgeService knowledgeService) {
+        this.knowledgeService = knowledgeService;
+    }
 
     @PostMapping("/create")
     @OperLog(module = "知识库管理", action = "创建文章")

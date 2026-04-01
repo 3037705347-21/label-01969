@@ -5,15 +5,17 @@ import com.petadopt.common.result.PageResult;
 import com.petadopt.common.result.Result;
 import com.petadopt.entity.Blacklist;
 import com.petadopt.service.BlacklistService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/blacklist")
-@RequiredArgsConstructor
 public class BlacklistController {
 
     private final BlacklistService blacklistService;
+
+    public BlacklistController(BlacklistService blacklistService) {
+        this.blacklistService = blacklistService;
+    }
 
     @PostMapping("/add")
     @OperLog(module = "黑名单管理", action = "添加黑名单")
